@@ -5,10 +5,8 @@ import com.abhishek.adminService.repository.QuestionRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-
 import java.time.Instant;
 import java.util.List;
-
 
 @Service
 @RequiredArgsConstructor
@@ -36,5 +34,9 @@ public class QuestionService {
 
     public void delete(String id) {
         questionRepository.deleteById(id);
+    }
+
+    public List<Question> findAllById(List<String> ids) {
+        return questionRepository.findAllById(ids);
     }
 }
