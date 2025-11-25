@@ -37,7 +37,7 @@ public class SecurityConfig {
     }
 
     /**
-     * Define the CORS rules for the application.
+     * Defines the CORS rules for the application.
      * This will be used by Spring Security because http.cors() is enabled.
      */
     @Bean
