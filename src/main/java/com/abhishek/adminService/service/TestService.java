@@ -27,8 +27,7 @@ import java.util.concurrent.ScheduledFuture;
 public class TestService {
 
     private final TestRepository testRepository;
-
-    private final NotificationClient notificationClient; // stub client to send notifications
+    private final NotificationClient notificationClient;
 
     // Simple in-memory scheduled task registry (for POC). For production use Quartz
     // or persistent scheduler.
@@ -101,9 +100,9 @@ public class TestService {
         // cancel existing schedules
         cancelSchedules(testId);
 
-        // schedule start
-        LocalDateTime now = java.time.LocalDateTime.now();
-        ZoneId zoneId = java.time.ZoneId.of("UTC");
+        // schedule start - using UTC timezone for comparison
+        ZoneId zoneId = ZoneId.of("UTC");
+        LocalDateTime now = LocalDateTime.now(zoneId); // Get current time in UTC
 
         if (test.getStartAt().isAfter(now)) {
             Date startTime = Date.from(test.getStartAt().atZone(zoneId).toInstant());
@@ -179,5 +178,4 @@ public class TestService {
     public List<Test> getTestsForCandidate(String candidateId) {
         return testRepository.findByAssignedCandidatesContains(candidateId);
     }
-
 }
