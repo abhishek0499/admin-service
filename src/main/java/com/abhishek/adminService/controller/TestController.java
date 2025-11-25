@@ -102,12 +102,14 @@ public class TestController {
     @PostMapping("/{testId}" + ENDPOINT_ASSIGN)
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<ApiResponse<Test>> assignTest(@PathVariable String testId,
-                                                        @Valid @RequestBody AssignTestRequest assignRequest) {
+                                                        @Valid @RequestBody AssignTestRequest assignRequest,
+                                                        @RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
         log.info("POST {}/{}{} - Assigning {} candidates to test",
                 ENDPOINT_ADMIN + ENDPOINT_TESTS, testId, ENDPOINT_ASSIGN,
                 assignRequest.getCandidateIds().size());
 
-        Test assignedTest = testService.assignCandidates(testId, assignRequest.getCandidateIds());
+        String bearerToken = extractBearerToken(authorizationHeader);
+        Test assignedTest = testService.assignCandidates(testId, assignRequest.getCandidateIds(), bearerToken);
 
         log.debug("Candidates assigned successfully to test: {}", testId);
         return ResponseEntity.ok(ApiResponse.<Test>builder()
@@ -129,5 +131,12 @@ public class TestController {
                 .message(MSG_TESTS_FETCHED)
                 .data(tests)
                 .build());
+    }
+
+    private String extractBearerToken(String authorizationHeader) {
+        if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
+            return authorizationHeader.substring(7);
+        }
+        return null;
     }
 }

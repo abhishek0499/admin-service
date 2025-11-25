@@ -1,9 +1,14 @@
 package com.abhishek.adminService.service;
 
+import com.abhishek.adminService.client.AuthClient;
 import com.abhishek.adminService.dto.CreateTestRequest;
+import com.abhishek.adminService.dto.UserDTO;
+import com.abhishek.adminService.dto.event.TestAssignedEvent;
+import com.abhishek.adminService.dto.event.TestScheduledEvent;
 import com.abhishek.adminService.exception.TestNotFoundException;
 import com.abhishek.adminService.model.Test;
 import com.abhishek.adminService.repository.TestRepository;
+import com.abhishek.adminService.service.publisher.NotificationPublisher;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.TaskScheduler;
@@ -29,7 +34,8 @@ import static com.abhishek.adminService.constant.Constants.*;
 public class TestService {
 
     private final TestRepository testRepository;
-    private final NotificationClient notificationClient;
+    private final NotificationPublisher notificationPublisher;
+    private final AuthClient authClient;
 
     // Simple in-memory scheduled task registry (for POC). For production use Quartz
     // or persistent scheduler.
@@ -141,6 +147,16 @@ public class TestService {
             ScheduledFuture<?> startFuture = taskScheduler.schedule(() -> startTest(test.getId()), startTime);
             startTasks.put(test.getId(), startFuture);
             log.debug("Test start scheduled for: {}", test.getStartAt());
+
+            // Send scheduled notification
+            TestScheduledEvent event = new TestScheduledEvent();
+            event.setTestId(test.getId());
+            event.setTestName(test.getName());
+            event.setScheduledAt(test.getStartAt());
+            event.setDuration(test.getDurationMinutes());
+            // Note: candidate emails might not be available here if not assigned yet
+            notificationPublisher.publishTestScheduledEvent(event);
+
         } else {
             // start immediately
             log.debug("Test start time is in the past, starting immediately");
@@ -173,12 +189,6 @@ public class TestService {
             test.setActive(true);
             testRepository.save(test);
             log.info("Test activated: {}", testId);
-
-            // send notifications to assigned candidates
-            if (test.getAssignedCandidates() != null && !test.getAssignedCandidates().isEmpty()) {
-                log.debug("Notifying {} candidates about test start", test.getAssignedCandidates().size());
-                notificationClient.notifyTestStarted(test);
-            }
         });
     }
 
@@ -189,15 +199,10 @@ public class TestService {
             test.setActive(false);
             testRepository.save(test);
             log.info("Test deactivated: {}", testId);
-
-            if (test.getAssignedCandidates() != null && !test.getAssignedCandidates().isEmpty()) {
-                log.debug("Notifying {} candidates about test end", test.getAssignedCandidates().size());
-                notificationClient.notifyTestEnded(test);
-            }
         });
     }
 
-    public Test assignCandidates(String testId, List<String> candidateIds) {
+    public Test assignCandidates(String testId, List<String> candidateIds, String bearerToken) {
         log.info("Assigning {} candidates to test: {}", candidateIds.size(), testId);
 
         Test test = testRepository.findById(testId)
@@ -219,8 +224,37 @@ public class TestService {
         log.info("Candidates assigned successfully to test: {}", testId);
         log.debug("Total candidates now assigned: {}", test.getAssignedCandidates().size());
 
-        // optionally notify candidates immediately about assignment
-        notificationClient.notifyAssigned(test, candidateIds);
+        // Fetch user details and send notifications
+        try {
+            Map<String, UserDTO> usersMap = authClient.fetchUsersMap(bearerToken);
+            List<TestAssignedEvent.CandidateInfo> candidateInfos = new ArrayList<>();
+
+            for (String candidateId : candidateIds) {
+                UserDTO user = usersMap.get(candidateId);
+                if (user != null) {
+                    TestAssignedEvent.CandidateInfo info = new TestAssignedEvent.CandidateInfo();
+                    info.setId(user.getId());
+                    info.setName(user.getName());
+                    info.setEmail(user.getEmail());
+                    candidateInfos.add(info);
+                }
+            }
+
+            if (!candidateInfos.isEmpty()) {
+                TestAssignedEvent event = new TestAssignedEvent();
+                event.setTestId(test.getId());
+                event.setTestName(test.getName());
+                event.setStartTime(test.getStartAt());
+                event.setEndTime(test.getEndAt());
+                event.setDurationMinutes(test.getDurationMinutes());
+                event.setTestLink("http://localhost:3000/test/" + test.getId()); // TODO: Externalize URL
+                event.setCandidates(candidateInfos);
+
+                notificationPublisher.publishTestAssignedEvent(event);
+            }
+        } catch (Exception e) {
+            log.error("Failed to send assignment notifications", e);
+        }
 
         return test;
     }
