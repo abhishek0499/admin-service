@@ -30,13 +30,6 @@ public class JwtUtil {
         }
     }
 
-
-    public String generateToken(String userId, String email, Set<String> roles) {
-        long now = System.currentTimeMillis();
-        return Jwts.builder().subject(userId).claim("email", email).claim("roles", roles).setIssuedAt(new Date(now)).setExpiration(new Date(now + expirationMs)).signWith(key).compact();
-    }
-
-
     public Claims parseClaims(String token) {
         return (Claims) Jwts.parser().verifyWith(key).build().parse(token).getPayload();
     }

@@ -1,34 +1,38 @@
 package com.abhishek.adminService.service;
 
+import com.abhishek.adminService.dto.CreateCategoryRequest;
 import com.abhishek.adminService.model.Category;
 import com.abhishek.adminService.repository.CategoryRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
-
 import java.util.List;
-
 
 @Service
 @RequiredArgsConstructor
 public class CategoryService {
     private final CategoryRepository categoryRepository;
 
-
-    public Category create(Category c) {
-        return categoryRepository.save(c);
+    public Category createCategory(CreateCategoryRequest request) {
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        return categoryRepository.save(category);
     }
 
-    public List<Category> findAll() {
+    public List<Category> findAllCategories() {
         return categoryRepository.findAll();
     }
 
-    public Category update(String id, Category c) {
-        c.setId(id);
-        return categoryRepository.save(c);
+    public Category updateCategory(String id, CreateCategoryRequest request) {
+        Category category = new Category();
+        category.setName(request.getName());
+        category.setDescription(request.getDescription());
+        category.setId(id);
+        return categoryRepository.save(category);
     }
 
-    public void delete(String id) {
+    public void deleteCategory(String id) {
         categoryRepository.deleteById(id);
     }
 }

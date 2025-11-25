@@ -1,8 +1,9 @@
 package com.abhishek.adminService.controller;
 
+import com.abhishek.adminService.dto.ApiResponse;
 import com.abhishek.adminService.dto.AssignTestRequest;
 import com.abhishek.adminService.dto.CreateTestRequest;
-import com.abhishek.adminService.model.TestDef;
+import com.abhishek.adminService.model.Test;
 import com.abhishek.adminService.service.TestService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -26,61 +27,68 @@ public class TestController {
     private final TestService testService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TestDef> create(@Valid @RequestBody CreateTestRequest req) {
-        TestDef t = new TestDef();
-        t.setName(req.getName());
-        t.setDescription(req.getDescription());
-        t.setCategoryIds(req.getCategoryIds());
-        t.setQuestionIds(req.getQuestionIds());
-        t.setDurationMinutes(req.getDurationMinutes());
-        t.setStartAt(req.getStartAt());
-        t.setEndAt(req.getEndAt());
-        return ResponseEntity.ok(testService.create(t));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Test>> createTest(@Valid @RequestBody CreateTestRequest testRequest) {
+        return ResponseEntity.ok(ApiResponse.<Test>builder()
+                .message("Test created successfully")
+                .data(testService.createTest(testRequest))
+                .build());
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<List<TestDef>> list() {
-        return ResponseEntity.ok(testService.findAll());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<Test>>> getAllTests() {
+        return ResponseEntity.ok(ApiResponse.<List<Test>>builder()
+                .message("Tests fetched successfully")
+                .data(testService.findAll())
+                .build());
     }
 
-    @GetMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'CANDIDATE')")
-    public ResponseEntity<TestDef> getById(@PathVariable String id) {
-        return ResponseEntity.ok(testService.findById(id)
-                .orElseThrow(() -> new NoSuchElementException("Test not found")));
+    @GetMapping("/{testId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'CANDIDATE')")
+    public ResponseEntity<ApiResponse<Test>> getTestById(@PathVariable String testId) {
+        return ResponseEntity.ok(ApiResponse.<Test>builder()
+                .message("Test fetched successfully")
+                .data(testService.findById(testId)
+                        .orElseThrow(() -> new NoSuchElementException("Test not found")))
+                .build());
     }
 
-    @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TestDef> update(@PathVariable String id, @Valid @RequestBody CreateTestRequest req) {
-        TestDef t = new TestDef();
-        t.setName(req.getName());
-        t.setDescription(req.getDescription());
-        t.setCategoryIds(req.getCategoryIds());
-        t.setQuestionIds(req.getQuestionIds());
-        t.setDurationMinutes(req.getDurationMinutes());
-        t.setStartAt(req.getStartAt());
-        t.setEndAt(req.getEndAt());
-        return ResponseEntity.ok(testService.update(id, t));
+    @PutMapping("/{testId}")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Test>> updateTest(@PathVariable String testId,
+                                                        @Valid @RequestBody CreateTestRequest testRequest) {
+        return ResponseEntity.ok(ApiResponse.<Test>builder()
+                .message("Test updated successfully")
+                .data(testService.updateTest(testId, testRequest))
+                .build());
     }
 
-    @PostMapping("/{id}/schedule")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TestDef> schedule(@PathVariable String id) {
-        return ResponseEntity.ok(testService.schedule(id));
+    @PostMapping("/{testId}/schedule")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Test>> scheduleTest(@PathVariable String testId) {
+        return ResponseEntity.ok(ApiResponse.<Test>builder()
+                .message("Test scheduled successfully")
+                .data(testService.schedule(testId))
+                .build());
     }
 
-    @PostMapping("/{id}/assign")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<TestDef> assign(@PathVariable String id, @Valid @RequestBody AssignTestRequest req) {
-        return ResponseEntity.ok(testService.assignCandidates(id, req.getCandidateIds()));
+    @PostMapping("/{testId}/assign")
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Test>> assignTest(@PathVariable String testId,
+                                                        @Valid @RequestBody AssignTestRequest assignRequest) {
+        return ResponseEntity.ok(ApiResponse.<Test>builder()
+                .message("Test assigned successfully")
+                .data(testService.assignCandidates(testId, assignRequest.getCandidateIds()))
+                .build());
     }
 
     @GetMapping("/candidate/{candidateId}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'CANDIDATE')")
-    public ResponseEntity<List<TestDef>> getTestsForCandidate(@PathVariable String candidateId) {
-        return ResponseEntity.ok(testService.getTestsForCandidate(candidateId));
+    @PreAuthorize("hasAnyRole('ADMIN', 'CANDIDATE')")
+    public ResponseEntity<ApiResponse<List<Test>>> getTestsForCandidate(@PathVariable String candidateId) {
+        return ResponseEntity.ok(ApiResponse.<List<Test>>builder()
+                .message("Candidate tests fetched successfully")
+                .data(testService.getTestsForCandidate(candidateId))
+                .build());
     }
 }

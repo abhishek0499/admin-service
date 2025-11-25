@@ -1,5 +1,6 @@
 package com.abhishek.adminService.controller;
 
+import com.abhishek.adminService.dto.ApiResponse;
 import com.abhishek.adminService.dto.CreateCategoryRequest;
 import com.abhishek.adminService.model.Category;
 import com.abhishek.adminService.service.CategoryService;
@@ -24,38 +25,40 @@ import java.util.List;
 public class CategoryController {
     private final CategoryService categoryService;
 
-
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Category> create(@Valid @RequestBody CreateCategoryRequest req) {
-        Category c = new Category();
-        c.setName(req.getName());
-        c.setDescription(req.getDescription());
-        return ResponseEntity.ok(categoryService.create(c));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Category>> createCategory(@Valid @RequestBody CreateCategoryRequest req) {
+        return ResponseEntity.ok(ApiResponse.<Category>builder()
+                .message("Category created successfully")
+                .data(categoryService.createCategory(req))
+                .build());
     }
-
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<List<Category>> list() {
-        return ResponseEntity.ok(categoryService.findAll());
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<List<Category>>> listCategory() {
+        return ResponseEntity.ok(ApiResponse.<List<Category>>builder()
+                .message("Categories fetched successfully")
+                .data(categoryService.findAllCategories())
+                .build());
     }
-
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Category> update(@PathVariable String id, @Valid @RequestBody CreateCategoryRequest req) {
-        Category c = new Category();
-        c.setName(req.getName());
-        c.setDescription(req.getDescription());
-        return ResponseEntity.ok(categoryService.update(id, c));
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Category>> updateCategory(@PathVariable String id,
+            @Valid @RequestBody CreateCategoryRequest req) {
+        return ResponseEntity.ok(ApiResponse.<Category>builder()
+                .message("Category updated successfully")
+                .data(categoryService.updateCategory(id, req))
+                .build());
     }
 
-
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        categoryService.delete(id);
-        return ResponseEntity.noContent().build();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteCategory(@PathVariable String id) {
+        categoryService.deleteCategory(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Category deleted successfully")
+                .build());
     }
 }

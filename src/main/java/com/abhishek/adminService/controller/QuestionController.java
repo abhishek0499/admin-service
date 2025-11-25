@@ -1,8 +1,10 @@
 package com.abhishek.adminService.controller;
 
+import com.abhishek.adminService.dto.ApiResponse;
 import com.abhishek.adminService.dto.CreateQuestionRequest;
 import com.abhishek.adminService.model.Question;
 import com.abhishek.adminService.service.QuestionService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -18,60 +20,53 @@ public class QuestionController {
     private final QuestionService questionService;
 
     @PostMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Question> create(@Valid @RequestBody CreateQuestionRequest req,
-            @RequestHeader(value = "X-User-Id", required = false) String createdBy) {
-        Question q = new Question();
-        q.setCategoryId(req.getCategoryId());
-        q.setDifficulty(req.getDifficulty());
-        q.setText(req.getText());
-        q.setOptions(req.getOptions().stream().map(o -> {
-            Question.Option opt = new Question.Option();
-            opt.setId(o.getId());
-            opt.setText(o.getText());
-            return opt;
-        }).toList());
-        q.setCorrectOptionId(req.getCorrectOptionId());
-        Question saved = questionService.create(q, createdBy == null ? "system" : createdBy);
-        return ResponseEntity.ok(saved);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Question>> createQuestion(@Valid @RequestBody CreateQuestionRequest questionRequest,
+                                                                HttpServletRequest servletRequest) {
+        Question saved = questionService.createQuestion(questionRequest,servletRequest);
+        return ResponseEntity.ok(ApiResponse.<Question>builder()
+                .message("Question created successfully")
+                .data(saved)
+                .build());
     }
 
     @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'CANDIDATE')")
-    public ResponseEntity<List<Question>> list(@RequestParam(required = false) String categoryId) {
-        List<Question> res = categoryId == null ? questionService.findAll()
+    @PreAuthorize("hasAnyRole('ADMIN', 'CANDIDATE')")
+    public ResponseEntity<ApiResponse<List<Question>>> getQuestionByCategoryId(@RequestParam(required = false) String categoryId) {
+        List<Question> res = categoryId == null ? questionService.findAllQuestions()
                 : questionService.findByCategory(categoryId);
-        return ResponseEntity.ok(res);
+        return ResponseEntity.ok(ApiResponse.<List<Question>>builder()
+                .message("Questions fetched successfully")
+                .data(res)
+                .build());
     }
 
     @PostMapping("/bulk")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER', 'CANDIDATE')")
-    public ResponseEntity<List<Question>> bulk(@RequestBody List<String> ids) {
-        return ResponseEntity.ok(questionService.findAllById(ids));
+    @PreAuthorize("hasAnyRole('ADMIN', 'CANDIDATE')")
+    public ResponseEntity<ApiResponse<List<Question>>> getAllQuestionsById(@RequestBody List<String> ids) {
+        return ResponseEntity.ok(ApiResponse.<List<Question>>builder()
+                .message("Bulk questions fetched successfully")
+                .data(questionService.findAllQuestionsById(ids))
+                .build());
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Question> update(@PathVariable String id, @Valid @RequestBody CreateQuestionRequest req) {
-        Question q = new Question();
-        q.setCategoryId(req.getCategoryId());
-        q.setDifficulty(req.getDifficulty());
-        q.setText(req.getText());
-        q.setOptions(req.getOptions().stream().map(o -> {
-            Question.Option opt = new Question.Option();
-            opt.setId(o.getId());
-            opt.setText(o.getText());
-            return opt;
-        }).toList());
-        q.setCorrectOptionId(req.getCorrectOptionId());
-        Question updated = questionService.update(id, q);
-        return ResponseEntity.ok(updated);
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Question>> updateQuestion(@PathVariable String id,
+                                                                @Valid @RequestBody CreateQuestionRequest questionRequest) {
+        Question updated = questionService.updateQuestion(id, questionRequest);
+        return ResponseEntity.ok(ApiResponse.<Question>builder()
+                .message("Question updated successfully")
+                .data(updated)
+                .build());
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyRole('ADMIN','MANAGER')")
-    public ResponseEntity<Void> delete(@PathVariable String id) {
-        questionService.delete(id);
-        return ResponseEntity.noContent().build();
+    @PreAuthorize("hasRole('ADMIN')")
+    public ResponseEntity<ApiResponse<Void>> deleteQuestion(@PathVariable String id) {
+        questionService.deleteQuestion(id);
+        return ResponseEntity.ok(ApiResponse.<Void>builder()
+                .message("Question deleted successfully")
+                .build());
     }
 }
