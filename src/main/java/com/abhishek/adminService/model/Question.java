@@ -18,10 +18,9 @@ public class Question {
     private String difficulty; // EASY/MEDIUM/HARD
     private String text;
     private List<Option> options;
-    private String correctOptionId; // server-side only
+    private String correctOptionId;
     private Instant createdAt;
     private String createdBy;
-
 
     @Data
     public static class Option {

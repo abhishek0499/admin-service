@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Component
 @RequiredArgsConstructor
@@ -40,27 +41,19 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             String userId = claims.getSubject();
             Object rolesObj = claims.get("roles");
 
-
             Collection<SimpleGrantedAuthority> authorities = extractAuthorities(rolesObj);
-
 
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(userId, null, authorities);
             authentication.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
             SecurityContextHolder.getContext().setAuthentication(authentication);
 
-
-// expose user id for controllers via header-like attribute
+            // expose user id for controllers via header-like attribute
             request.setAttribute("principalId", userId);
-
-
         } catch (Exception ex) {
             SecurityContextHolder.clearContext();
         }
-
-
         chain.doFilter(request, response);
     }
-
 
     @SuppressWarnings("unchecked")
     private Collection<SimpleGrantedAuthority> extractAuthorities(Object rolesObj) {
@@ -69,7 +62,7 @@ public class JwtAuthFilter extends OncePerRequestFilter {
             return ((List<?>) rolesObj).stream().map(Object::toString).map(r -> new SimpleGrantedAuthority("ROLE_" + r)).collect(Collectors.toList());
         } else {
             String rolesStr = rolesObj.toString();
-            return List.of(rolesStr.split(",")).stream().map(String::trim).filter(s -> !s.isEmpty()).map(r -> new SimpleGrantedAuthority("ROLE_" + r)).collect(Collectors.toList());
+            return Stream.of(rolesStr.split(",")).map(String::trim).filter(s -> !s.isEmpty()).map(r -> new SimpleGrantedAuthority("ROLE_" + r)).collect(Collectors.toList());
         }
     }
 }
