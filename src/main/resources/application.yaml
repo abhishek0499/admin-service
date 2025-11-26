@@ -18,3 +18,7 @@ server:
 
 jwt:
   secret: am9pbmdpcmxhbmltYWxzaG9lYmxpbmRwbGFudGJlbGxjdXJyZW50YWRkaXRpb253YW4=
+
+logging:
+  pattern:
+    console: "%clr(%d{yyyy-MM-dd HH:mm:ss.SSS}){faint} %clr([%thread]){magenta} %clr(%5p){blue} %clr(%logger{36}){cyan} %clr(:){white} %m%n"

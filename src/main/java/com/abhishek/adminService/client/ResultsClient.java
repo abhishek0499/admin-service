@@ -16,7 +16,8 @@ public class ResultsClient {
 
     public List<Map<String, Object>> getTestResults(String testId, String bearerToken) {
         try {
-            var req = restClient.get().uri(RESULTS_SERVICE_URL + "/test/" + testId);
+            var req = restClient.get()
+                    .uri(RESULTS_SERVICE_URL + "/test/" + testId);
             if (bearerToken != null)
                 req.headers(h -> h.setBearerAuth(bearerToken));
 

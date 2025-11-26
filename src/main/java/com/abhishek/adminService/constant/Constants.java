@@ -9,7 +9,6 @@ public final class Constants {
         // Prevent instantiation
     }
 
-    // ==================== Success Messages ====================
     public static final String MSG_TEST_CREATED = "Test created successfully";
     public static final String MSG_TEST_UPDATED = "Test updated successfully";
     public static final String MSG_TEST_DELETED = "Test deleted successfully";
@@ -28,14 +27,9 @@ public final class Constants {
     public static final String MSG_CATEGORIES_FETCHED = "Categories fetched successfully";
     public static final String MSG_QUESTIONS_FETCHED = "Questions fetched successfully";
 
-    // ==================== Error Messages ====================
-    public static final String ERROR_TEST_NOT_FOUND = "Test not found";
-    public static final String ERROR_CATEGORY_NOT_FOUND = "Category not found";
-    public static final String ERROR_QUESTION_NOT_FOUND = "Question not found";
     public static final String ERROR_START_TIME_REQUIRED = "Start time is required to schedule a test";
     public static final String ERROR_VALIDATION_FAILED = "Validation failed";
 
-    // ==================== Endpoint Paths ====================
     public static final String ENDPOINT_ADMIN = "/admin";
     public static final String ENDPOINT_TESTS = "/tests";
     public static final String ENDPOINT_CATEGORIES = "/categories";

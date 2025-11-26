@@ -7,5 +7,4 @@ public class UserDTO {
     private String id;
     private String email;
     private String name;
-    // other fields if needed
 }

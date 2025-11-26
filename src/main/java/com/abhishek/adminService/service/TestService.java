@@ -15,6 +15,7 @@ import org.springframework.scheduling.TaskScheduler;
 import org.springframework.scheduling.concurrent.ConcurrentTaskScheduler;
 import org.springframework.stereotype.Service;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.ArrayList;
@@ -37,8 +38,6 @@ public class TestService {
     private final NotificationPublisher notificationPublisher;
     private final AuthClient authClient;
 
-    // Simple in-memory scheduled task registry (for POC). For production use Quartz
-    // or persistent scheduler.
     private final TaskScheduler taskScheduler = new ConcurrentTaskScheduler();
     private final Map<String, ScheduledFuture<?>> startTasks = new HashMap<>();
     private final Map<String, ScheduledFuture<?>> endTasks = new HashMap<>();
@@ -140,10 +139,10 @@ public class TestService {
 
         // schedule start
         ZoneId zoneId = ZoneId.of("UTC");
-        LocalDateTime now = LocalDateTime.now(zoneId);
+        LocalDateTime currentDateTime = LocalDateTime.now(zoneId);
 
-        if (test.getStartAt().isAfter(now)) {
-            Date startTime = Date.from(test.getStartAt().atZone(zoneId).toInstant());
+        if (test.getStartAt().isAfter(currentDateTime)) {
+            Instant startTime = test.getStartAt().atZone(zoneId).toInstant();
             ScheduledFuture<?> startFuture = taskScheduler.schedule(() -> startTest(test.getId()), startTime);
             startTasks.put(test.getId(), startFuture);
             log.debug("Test start scheduled for: {}", test.getStartAt());
@@ -154,7 +153,6 @@ public class TestService {
             event.setTestName(test.getName());
             event.setScheduledAt(test.getStartAt());
             event.setDuration(test.getDurationMinutes());
-            // Note: candidate emails might not be available here if not assigned yet
             notificationPublisher.publishTestScheduledEvent(event);
 
         } else {
@@ -165,8 +163,8 @@ public class TestService {
 
         // schedule end if present
         if (test.getEndAt() != null) {
-            if (test.getEndAt().isAfter(now)) {
-                Date endTime = Date.from(test.getEndAt().atZone(zoneId).toInstant());
+            if (test.getEndAt().isAfter(currentDateTime)) {
+                Instant endTime = test.getEndAt().atZone(zoneId).toInstant();
                 ScheduledFuture<?> endFuture = taskScheduler.schedule(() -> endTest(test.getId()), endTime);
                 endTasks.put(test.getId(), endFuture);
                 log.debug("Test end scheduled for: {}", test.getEndAt());
@@ -247,7 +245,7 @@ public class TestService {
                 event.setStartTime(test.getStartAt());
                 event.setEndTime(test.getEndAt());
                 event.setDurationMinutes(test.getDurationMinutes());
-                event.setTestLink("http://localhost:3000/test/" + test.getId()); // TODO: Externalize URL
+                event.setTestLink("http://localhost:3000/test/" + test.getId()); // For testing purpose
                 event.setCandidates(candidateInfos);
 
                 notificationPublisher.publishTestAssignedEvent(event);

@@ -19,9 +19,78 @@ import static com.abhishek.adminService.constant.Constants.*;
 @ControllerAdvice
 public class GlobalExceptionHandler {
 
-    /**
-     * Handle validation errors from @Valid annotations
-     */
+    @ExceptionHandler(TestNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleTestNotFound(TestNotFoundException exception) {
+        log.error("Test not found - ID: {}", exception.getTestId());
+        log.debug("TestNotFoundException details:", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.<Void>builder()
+                        .message(exception.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(CategoryNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleCategoryNotFound(CategoryNotFoundException exception) {
+        log.error("Category not found - ID: {}", exception.getCategoryId());
+        log.debug("CategoryNotFoundException details:", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.<Void>builder()
+                        .message(exception.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(QuestionNotFoundException.class)
+    public ResponseEntity<ApiResponse<Void>> handleQuestionNotFound(QuestionNotFoundException exception) {
+        log.error("Question not found - ID: {}", exception.getQuestionId());
+        log.debug("QuestionNotFoundException details:", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.<Void>builder()
+                        .message(exception.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(NoSuchElementException.class)
+    public ResponseEntity<ApiResponse<Void>> handleNoSuchElement(NoSuchElementException exception) {
+        log.error("Resource not found: {}", exception.getMessage());
+        log.debug("NoSuchElementException details:", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.NOT_FOUND)
+                .body(ApiResponse.<Void>builder()
+                        .message(exception.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException exception) {
+        log.error("Illegal argument: {}", exception.getMessage());
+        log.debug("IllegalArgumentException stack trace:", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.BAD_REQUEST)
+                .body(ApiResponse.<Void>builder()
+                        .message(exception.getMessage())
+                        .build());
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception exception) {
+        log.error("Unhandled exception occurred: {}", exception.getMessage());
+        log.error("Exception stack trace:", exception);
+
+        return ResponseEntity
+                .status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body(ApiResponse.<Void>builder()
+                        .message("An unexpected error occurred. Please try again later.")
+                        .build());
+    }
+
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<ApiResponse<Map<String, String>>> handleValidationException(
             MethodArgumentNotValidException exception) {
@@ -44,93 +113,4 @@ public class GlobalExceptionHandler {
                         .build());
     }
 
-    /**
-     * Handle TestNotFoundException
-     */
-    @ExceptionHandler(TestNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleTestNotFound(TestNotFoundException exception) {
-        log.error("Test not found - ID: {}", exception.getTestId());
-        log.debug("TestNotFoundException details:", exception);
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.<Void>builder()
-                        .message(exception.getMessage())
-                        .build());
-    }
-
-    /**
-     * Handle CategoryNotFoundException
-     */
-    @ExceptionHandler(CategoryNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleCategoryNotFound(CategoryNotFoundException exception) {
-        log.error("Category not found - ID: {}", exception.getCategoryId());
-        log.debug("CategoryNotFoundException details:", exception);
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.<Void>builder()
-                        .message(exception.getMessage())
-                        .build());
-    }
-
-    /**
-     * Handle QuestionNotFoundException
-     */
-    @ExceptionHandler(QuestionNotFoundException.class)
-    public ResponseEntity<ApiResponse<Void>> handleQuestionNotFound(QuestionNotFoundException exception) {
-        log.error("Question not found - ID: {}", exception.getQuestionId());
-        log.debug("QuestionNotFoundException details:", exception);
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.<Void>builder()
-                        .message(exception.getMessage())
-                        .build());
-    }
-
-    /**
-     * Handle NoSuchElementException (fallback for generic not found)
-     */
-    @ExceptionHandler(NoSuchElementException.class)
-    public ResponseEntity<ApiResponse<Void>> handleNoSuchElement(NoSuchElementException exception) {
-        log.error("Resource not found: {}", exception.getMessage());
-        log.debug("NoSuchElementException details:", exception);
-
-        return ResponseEntity
-                .status(HttpStatus.NOT_FOUND)
-                .body(ApiResponse.<Void>builder()
-                        .message(exception.getMessage())
-                        .build());
-    }
-
-    /**
-     * Handle IllegalArgumentException
-     */
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<ApiResponse<Void>> handleIllegalArgument(IllegalArgumentException exception) {
-        log.error("Illegal argument: {}", exception.getMessage());
-        log.debug("IllegalArgumentException stack trace:", exception);
-
-        return ResponseEntity
-                .status(HttpStatus.BAD_REQUEST)
-                .body(ApiResponse.<Void>builder()
-                        .message(exception.getMessage())
-                        .build());
-    }
-
-    /**
-     * Handle all other uncaught exceptions
-     */
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiResponse<Void>> handleGlobalException(Exception exception) {
-        log.error("Unhandled exception occurred: {}", exception.getMessage());
-        log.error("Exception stack trace:", exception);
-
-        return ResponseEntity
-                .status(HttpStatus.INTERNAL_SERVER_ERROR)
-                .body(ApiResponse.<Void>builder()
-                        .message("An unexpected error occurred. Please try again later.")
-                        .build());
-    }
 }

@@ -14,7 +14,7 @@ public class Test {
     private String id;
     private String name;
     private String description;
-    private List<String> categoryIds; // optional
+    private List<String> categoryIds; // optional if in future we want to sort based on category
     private List<String> questionIds; // explicit questions
     private int durationMinutes;
     private LocalDateTime startAt;
