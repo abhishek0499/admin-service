@@ -158,7 +158,7 @@ public class TestService {
         } else {
             // start immediately
             log.debug("Test start time is in the past, starting immediately");
-            startTest(test.getId());
+            test.setActive(true);
         }
 
         // schedule end if present
@@ -170,7 +170,7 @@ public class TestService {
                 log.debug("Test end scheduled for: {}", test.getEndAt());
             } else {
                 log.debug("Test end time is in the past, ending immediately");
-                endTest(test.getId());
+                test.setActive(false);
             }
         }
 
